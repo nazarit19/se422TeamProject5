@@ -1,0 +1,345 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Craigslist-style Marketplace App
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    Environment:
+      Variables:
+        STAGE: !Ref Stage
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+
+Resources:
+
+  # -------------------------------------------------------
+  # AUTH — COGNITO
+  # -------------------------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub marketplace-users-${Stage}
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireNumbers: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  # -------------------------------------------------------
+  # API GATEWAY
+  # -------------------------------------------------------
+  MarketplaceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+
+  # -------------------------------------------------------
+  # S3 — IMAGE UPLOADS
+  # -------------------------------------------------------
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub marketplace-images-${Stage}-033879516309
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods:
+              - GET
+              - PUT
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+
+  # -------------------------------------------------------
+  # DYNAMODB TABLES
+  # -------------------------------------------------------
+  ListingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub marketplace-listings-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub marketplace-users-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  MessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub marketplace-messages-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # -------------------------------------------------------
+  # LAMBDA FUNCTIONS — LISTINGS
+  # -------------------------------------------------------
+  GetListingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/listings/get.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListingsTable
+      Environment:
+        Variables:
+          LISTINGS_TABLE: !Ref ListingsTable
+      Events:
+        GetListings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /listings
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  GetListingByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/listings/getById.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListingsTable
+      Environment:
+        Variables:
+          LISTINGS_TABLE: !Ref ListingsTable
+      Events:
+        GetListingById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /listings/{id}
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  CreateListingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/listings/create.handler
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref ListingsTable
+      Environment:
+        Variables:
+          LISTINGS_TABLE: !Ref ListingsTable
+      Events:
+        CreateListing:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /listings
+            Method: post
+
+  UpdateListingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/listings/update.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListingsTable
+      Environment:
+        Variables:
+          LISTINGS_TABLE: !Ref ListingsTable
+      Events:
+        UpdateListing:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /listings/{id}
+            Method: put
+
+  DeleteListingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/listings/delete.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListingsTable
+      Environment:
+        Variables:
+          LISTINGS_TABLE: !Ref ListingsTable
+      Events:
+        DeleteListing:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /listings/{id}
+            Method: delete
+
+  # -------------------------------------------------------
+  # LAMBDA FUNCTIONS — USERS
+  # -------------------------------------------------------
+  GetUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/users/get.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /users/{id}
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  UpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/users/update.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+      Events:
+        UpdateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /users/{id}
+            Method: put
+
+  # -------------------------------------------------------
+  # LAMBDA FUNCTIONS — MESSAGING
+  # -------------------------------------------------------
+  GetMessagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/messaging/get.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MessagesTable
+      Environment:
+        Variables:
+          MESSAGES_TABLE: !Ref MessagesTable
+      Events:
+        GetMessages:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /messages/{listingId}
+            Method: get
+
+  SendMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/messaging/send.handler
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref MessagesTable
+      Environment:
+        Variables:
+          MESSAGES_TABLE: !Ref MessagesTable
+      Events:
+        SendMessage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /messages/{listingId}
+            Method: post
+
+  # -------------------------------------------------------
+  # LAMBDA FUNCTIONS — IMAGES
+  # -------------------------------------------------------
+  GetUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/images/getUploadUrl.handler
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref ImagesBucket
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucket
+      Events:
+        GetUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /images/upload-url
+            Method: get
+
+# -------------------------------------------------------
+# OUTPUTS
+# -------------------------------------------------------
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub "https://${MarketplaceApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+
+  ImagesBucketName:
+    Description: S3 bucket for listing images
+    Value: !Ref ImagesBucket
+
+  ListingsTableName:
+    Description: DynamoDB listings table
+    Value: !Ref ListingsTable
+
+  UsersTableName:
+    Description: DynamoDB users table
+    Value: !Ref UsersTable
+
+  MessagesTableName:
+    Description: DynamoDB messages table
+    Value: !Ref MessagesTable

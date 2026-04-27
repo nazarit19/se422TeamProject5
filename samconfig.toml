@@ -1,0 +1,13 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "marketplace-dev"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"dev\""
+resolve_s3 = true
+s3_prefix = "marketplace-dev"
+confirm_changeset = true
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"
