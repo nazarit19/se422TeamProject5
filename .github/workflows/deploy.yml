@@ -80,7 +80,7 @@ jobs:
       - name: Install and build frontend
         working-directory: frontend
         run: |
-          npm installl --legacy-peer-deps
+          npm install --legacy-peer-deps
           npm run build
 
       - name: Configure AWS credentials
