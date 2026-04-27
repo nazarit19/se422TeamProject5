@@ -312,6 +312,50 @@ Resources:
             Path: /images/upload-url
             Method: get
 
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub marketplace-frontend-${Stage}-033879516309
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html    # needed for React Router
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+
+  # --- CloudFront Distribution ---
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultRootObject: index.html
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+        Origins:
+          - Id: FrontendS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig: {}
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
 # -------------------------------------------------------
 # OUTPUTS
 # -------------------------------------------------------
@@ -343,3 +387,7 @@ Outputs:
   MessagesTableName:
     Description: DynamoDB messages table
     Value: !Ref MessagesTable
+
+  FrontendUrl:
+    Description: CloudFront URL
+    Value: !Sub "https://${FrontendDistribution.DomainName}"
