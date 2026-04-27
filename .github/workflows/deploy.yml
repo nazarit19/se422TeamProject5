@@ -80,7 +80,7 @@ jobs:
       - name: Install and build frontend
         working-directory: frontend
         run: |
-          npm ci --legacy-peer-deps
+          npm installl --legacy-peer-deps
           npm run build
 
       - name: Configure AWS credentials
@@ -92,7 +92,7 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync frontend/build/ s3://marketplace-frontend-dev-033879516309 \
+          aws s3 sync frontend/dist/ s3://marketplace-frontend-dev-033879516309 \
             --delete
 
       - name: Invalidate CloudFront cache
