@@ -315,10 +315,15 @@ Resources:
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub marketplace-frontend-${Stage}-033879516309
+      BucketName: !Sub marketplace-frontend-dev-033879516309
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: index.html    # needed for React Router
+        ErrorDocument: index.html
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
