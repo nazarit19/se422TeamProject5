@@ -97,9 +97,11 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name marketplace-dev \
+            --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue" \
+            --output text)
+          echo "Distribution ID: $DISTRIBUTION_ID"
           aws cloudfront create-invalidation \
-            --distribution-id $(aws cloudformation describe-stacks \
-              --stack-name marketplace-dev \
-              --query 'Stacks[0].Outputs[?OutputKey==`FrontendDistributionId`].OutputValue' \
-              --output text) \
+            --distribution-id $DISTRIBUTION_ID \
             --paths "/*"
