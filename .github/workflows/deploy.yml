@@ -79,6 +79,10 @@ jobs:
 
       - name: Install and build frontend
         working-directory: frontend
+        env: 
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_USER_POOL_ID: ${{ secrets.VITE_USER_POOL_ID }}
+          VITE_USER_POOL_CLIENT_ID: ${{ secrets.VITE_USER_POOL_CLIENT_ID }}
         run: |
           npm install --legacy-peer-deps
           npm run build
