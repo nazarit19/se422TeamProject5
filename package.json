@@ -6,6 +6,13 @@
   "scripts": {
     "test": "jest --passWithNoTests"
   },
+  "jest" : {
+      "testPathIgnorePatterns" : [
+        "/node_modules",
+        "/frontend/"
+      ]
+  }
+  ,
   "dependencies": {
     "pg": "^8.11.0"
   },
