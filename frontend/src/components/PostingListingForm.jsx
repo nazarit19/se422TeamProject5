@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthenticator } from '@aws-amplify/ui-react'
+import { fetchAuthSession } from 'aws-amplify/auth'
 import { SECTIONS, FIELD_LABELS, TEXTAREA_FIELDS, BOOL_FIELDS, styles } from '../constants'
 
 export default function PostListingForm({ onClose, onPosted }) {
@@ -14,7 +15,7 @@ export default function PostListingForm({ onClose, onPosted }) {
   const [error, setError] = useState(null)
 
   const categoryFields = selectedSection && selectedCategory
-    ? SECTIONS[selectedSection].categories.find(c => c.name === selectedCategory)?.fields || []
+    ? SECTIONS[selectedSection].categories.find((category) => category.name === selectedCategory)?.fields || []
     : []
 
   const handleImageChange = (e) => {
@@ -47,18 +48,30 @@ export default function PostListingForm({ onClose, onPosted }) {
     setLoading(true)
     setError(null)
 
-    const missing = categoryFields.filter(f => !form[f] && !BOOL_FIELDS.includes(f))
+    const missing = categoryFields.filter((field) => !form[field] && !BOOL_FIELDS.includes(field))
     if (!form.title || missing.length > 0) {
-      setError(`Please fill in all fields: ${missing.map(f => FIELD_LABELS[f] || f).join(', ')}`)
+      setError(`Please fill in all fields: ${missing.map((field) => FIELD_LABELS[field] || field).join(', ')}`)
       setLoading(false)
       return
     }
 
     try {
+      const session = await fetchAuthSession()
+      const token =
+        session.tokens?.accessToken?.toString() ||
+        session.tokens?.idToken?.toString()
+
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
       const imageUrl = await uploadImage()
       const res = await fetch(`${import.meta.env.VITE_API_URL}listings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...form,
           section: selectedSection,
@@ -81,7 +94,7 @@ export default function PostListingForm({ onClose, onPosted }) {
   return (
     <div style={styles.modalOverlay}>
       <div style={{ ...styles.modal, maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <button style={styles.closeBtn} onClick={onClose}>✕</button>
+        <button style={styles.closeBtn} onClick={onClose}>x</button>
         <h2 style={styles.modalTitle}>Post an Ad</h2>
 
         {step === 1 && (
@@ -91,7 +104,7 @@ export default function PostListingForm({ onClose, onPosted }) {
               <div key={section} style={{ marginBottom: '16px' }}>
                 <div style={styles.sectionHeader}>{icon} {section}</div>
                 <div style={styles.categoryGrid}>
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <button
                       key={cat.name}
                       style={{
@@ -111,7 +124,7 @@ export default function PostListingForm({ onClose, onPosted }) {
               disabled={!selectedSection || !selectedCategory}
               onClick={() => setStep(2)}
             >
-              Continue →
+              Continue ->
             </button>
           </div>
         )}
@@ -119,8 +132,8 @@ export default function PostListingForm({ onClose, onPosted }) {
         {step === 2 && (
           <form onSubmit={handleSubmit}>
             <p style={styles.stepLabel}>
-              <span>Step 2: {selectedSection} › {selectedCategory}</span>
-              <button type="button" style={styles.backBtn} onClick={() => setStep(1)}>← Back</button>
+              <span>Step 2: {selectedSection} &gt; {selectedCategory}</span>
+              <button type="button" style={styles.backBtn} onClick={() => setStep(1)}>&lt;- Back</button>
             </p>
 
             {error && <p style={styles.error}>{error}</p>}
@@ -137,7 +150,7 @@ export default function PostListingForm({ onClose, onPosted }) {
               />
             </div>
 
-            {categoryFields.map(field => (
+            {categoryFields.map((field) => (
               <div key={field} style={styles.formGroup}>
                 <label style={styles.label}>{FIELD_LABELS[field] || field} *</label>
                 {BOOL_FIELDS.includes(field) ? (
@@ -177,7 +190,7 @@ export default function PostListingForm({ onClose, onPosted }) {
             </div>
 
             <button type="submit" style={{ ...styles.btnPrimary, width: '100%' }} disabled={loading}>
-              {loading ? 'Posting...' : '📌 Post Listing'}
+              {loading ? 'Posting...' : 'Post Listing'}
             </button>
           </form>
         )}

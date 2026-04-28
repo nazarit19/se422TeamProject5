@@ -1,55 +1,22 @@
-export const SECTIONS = {
-  'For Sale': {
-    icon: '🏷️',
-    categories: [
-      { name: 'Cars + Trucks', fields: ['year','make','model','color','condition','mileage','price','description','city','phone'] },
-      { name: 'Motorcycles',   fields: ['year','make','model','color','condition','mileage','price','description','city','phone'] },
-      { name: 'Boats',         fields: ['yearBuilt','makeModel','color','type','condition','price','description','city','phone'] },
-      { name: 'Books',         fields: ['title','author','subject','condition','edition','isbn','price','description','city','phone'] },
-      { name: 'Furniture',     fields: ['item','material','color','condition','dimensions','brand','price','description','city','phone'] },
-    ]
-  },
-  'Housing': {
-    icon: '🏠',
-    categories: [
-      { name: 'Apartments',    fields: ['bedrooms','bathrooms','sqft','rent','deposit','petsAllowed','available','description','city','phone'] },
-      { name: 'Houses',        fields: ['bedrooms','bathrooms','sqft','price','garage','yearBuilt','description','city','phone'] },
-      { name: 'Rooms',         fields: ['roomType','furnished','utilities','rent','available','preferences','description','city','phone'] },
-      { name: 'Commercial',    fields: ['sqft','type','zoning','rent','available','parking','description','city','phone'] },
-      { name: 'Land',          fields: ['acres','zoning','utilities','price','access','survey','description','city','phone'] },
-    ]
-  },
-  'Services': {
-    icon: '🔧',
-    categories: [
-      { name: 'Automotive',    fields: ['serviceType','experience','certifications','rate','availability','mobile','description','city','phone'] },
-      { name: 'Cleaning',      fields: ['serviceType','residential','commercial','rate','frequency','supplies','description','city','phone'] },
-      { name: 'Tutoring',      fields: ['subject','level','experience','rate','online','inPerson','description','city','phone'] },
-      { name: 'Landscaping',   fields: ['serviceType','equipment','experience','rate','licensed','insured','description','city','phone'] },
-      { name: 'Tech Support',  fields: ['serviceType','experience','certifications','rate','remote','onSite','description','city','phone'] },
-    ]
-  },
-  'Jobs': {
-    icon: '💼',
-    categories: [
-      { name: 'Full-Time',     fields: ['title','company','industry','salary','experience','education','benefits','description','city','phone'] },
-      { name: 'Part-Time',     fields: ['title','company','hours','pay','schedule','experience','description','city','phone'] },
-      { name: 'Internships',   fields: ['title','company','duration','paid','credit','major','description','city','phone'] },
-      { name: 'Freelance',     fields: ['title','skills','rate','duration','remote','experience','description','city','phone'] },
-      { name: 'Gigs',          fields: ['title','type','pay','schedule','requirements','description','city','phone'] },
-    ]
-  },
-  'Community': {
-    icon: '🤝',
-    categories: [
-      { name: 'Events',        fields: ['eventName','date','time','venue','cost','capacity','organizer','description','city','phone'] },
-      { name: 'Classes',       fields: ['subject','instructor','schedule','cost','location','materials','description','city','phone'] },
-      { name: 'Volunteers',    fields: ['organization','role','commitment','skills','cause','description','city','phone'] },
-      { name: 'Groups',        fields: ['groupName','type','meetingTime','location','size','requirements','description','city','phone'] },
-      { name: 'Lost + Found',  fields: ['itemType','color','location','date','reward','contact','description','city','phone'] },
-    ]
-  }
+import listingSections from './listingSections.json'
+
+const SECTION_ICONS = {
+  'For Sale': '\u{1F3F7}\uFE0F',
+  Housing: '\u{1F3E0}',
+  Services: '\u{1F527}',
+  Jobs: '\u{1F4BC}',
+  Community: '\u{1F91D}'
 }
+
+export const SECTIONS = Object.fromEntries(
+  Object.entries(listingSections).map(([sectionName, categories]) => [
+    sectionName,
+    {
+      icon: SECTION_ICONS[sectionName] || '',
+      categories: Object.entries(categories).map(([name, fields]) => ({ name, fields }))
+    }
+  ])
+)
 
 export const FIELD_LABELS = {
   year: 'Year', make: 'Make', model: 'Model', color: 'Color',
@@ -82,12 +49,12 @@ export const FIELD_LABELS = {
   commitment: 'Time Commitment', cause: 'Cause/Mission',
   groupName: 'Group Name', meetingTime: 'Meeting Time', location: 'Location',
   size: 'Group Size', requirements: 'Requirements', itemType: 'Item Type',
-  reward: 'Reward Offered', contact: 'Contact',
+  reward: 'Reward Offered', contact: 'Contact'
 }
 
 export const TEXTAREA_FIELDS = ['description', 'benefits', 'preferences', 'requirements', 'cause']
 export const BOOL_FIELDS = ['petsAllowed', 'furnished', 'mobile', 'residential', 'commercial', 'online', 'inPerson', 'licensed', 'insured', 'remote', 'onSite', 'paid', 'credit', 'survey']
- 
+
 export const styles = {
   page: { minHeight: '100vh', background: '#f7f7f5', fontFamily: "'Georgia', serif" },
   header: { background: '#fff', borderBottom: '2px solid #222', position: 'sticky', top: 0, zIndex: 100 },

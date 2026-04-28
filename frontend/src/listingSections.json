@@ -1,0 +1,37 @@
+{
+  "For Sale": {
+    "Cars + Trucks": ["year", "make", "model", "color", "condition", "mileage", "price", "description", "city", "phone"],
+    "Motorcycles": ["year", "make", "model", "color", "condition", "mileage", "price", "description", "city", "phone"],
+    "Boats": ["yearBuilt", "makeModel", "color", "type", "condition", "price", "description", "city", "phone"],
+    "Books": ["title", "author", "subject", "condition", "edition", "isbn", "price", "description", "city", "phone"],
+    "Furniture": ["item", "material", "color", "condition", "dimensions", "brand", "price", "description", "city", "phone"]
+  },
+  "Housing": {
+    "Apartments": ["bedrooms", "bathrooms", "sqft", "rent", "deposit", "petsAllowed", "available", "description", "city", "phone"],
+    "Houses": ["bedrooms", "bathrooms", "sqft", "price", "garage", "yearBuilt", "description", "city", "phone"],
+    "Rooms": ["roomType", "furnished", "utilities", "rent", "available", "preferences", "description", "city", "phone"],
+    "Commercial": ["sqft", "type", "zoning", "rent", "available", "parking", "description", "city", "phone"],
+    "Land": ["acres", "zoning", "utilities", "price", "access", "survey", "description", "city", "phone"]
+  },
+  "Services": {
+    "Automotive": ["serviceType", "experience", "certifications", "rate", "availability", "mobile", "description", "city", "phone"],
+    "Cleaning": ["serviceType", "residential", "commercial", "rate", "frequency", "supplies", "description", "city", "phone"],
+    "Tutoring": ["subject", "level", "experience", "rate", "online", "inPerson", "description", "city", "phone"],
+    "Landscaping": ["serviceType", "equipment", "experience", "rate", "licensed", "insured", "description", "city", "phone"],
+    "Tech Support": ["serviceType", "experience", "certifications", "rate", "remote", "onSite", "description", "city", "phone"]
+  },
+  "Jobs": {
+    "Full-Time": ["title", "company", "industry", "salary", "experience", "education", "benefits", "description", "city", "phone"],
+    "Part-Time": ["title", "company", "hours", "pay", "schedule", "experience", "description", "city", "phone"],
+    "Internships": ["title", "company", "duration", "paid", "credit", "major", "description", "city", "phone"],
+    "Freelance": ["title", "skills", "rate", "duration", "remote", "experience", "description", "city", "phone"],
+    "Gigs": ["title", "type", "pay", "schedule", "requirements", "description", "city", "phone"]
+  },
+  "Community": {
+    "Events": ["eventName", "date", "time", "venue", "cost", "capacity", "organizer", "description", "city", "phone"],
+    "Classes": ["subject", "instructor", "schedule", "cost", "location", "materials", "description", "city", "phone"],
+    "Volunteers": ["organization", "role", "commitment", "skills", "cause", "description", "city", "phone"],
+    "Groups": ["groupName", "type", "meetingTime", "location", "size", "requirements", "description", "city", "phone"],
+    "Lost + Found": ["itemType", "color", "location", "date", "reward", "contact", "description", "city", "phone"]
+  }
+}

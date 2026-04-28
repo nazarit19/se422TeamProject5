@@ -22,17 +22,31 @@ describe('listing handlers', () => {
   })
 
   describe('POST /listings', () => {
-    test('creates a listing with generated id and createdAt', async () => {
+    test('creates a listing with generated id and createdAt from REST API Cognito claims', async () => {
       send.mockResolvedValue({})
 
       const response = await createListing({
+        requestContext: {
+          authorizer: {
+            claims: {
+              sub: 'user-sub-123'
+            }
+          }
+        },
         body: JSON.stringify({
           title: 'Sofa for sale',
           section: 'For Sale',
           category: 'Furniture',
-          userId: 'alice@example.com',
+          item: 'Sofa',
+          material: 'Leather',
+          color: 'Brown',
+          condition: 'Like New',
+          dimensions: '84x35x32',
+          brand: 'West Elm',
           price: '150',
-          description: 'Like new'
+          description: 'Like new',
+          city: 'Chicago',
+          phone: '555-111-2222'
         })
       })
 
@@ -43,9 +57,17 @@ describe('listing handlers', () => {
         title: 'Sofa for sale',
         section: 'For Sale',
         category: 'Furniture',
-        userId: 'alice@example.com',
+        userId: 'user-sub-123',
+        item: 'Sofa',
+        material: 'Leather',
+        color: 'Brown',
+        condition: 'Like New',
+        dimensions: '84x35x32',
+        brand: 'West Elm',
         price: '150',
-        description: 'Like new'
+        description: 'Like new',
+        city: 'Chicago',
+        phone: '555-111-2222'
       })
       expect(body.id).toEqual(expect.any(String))
       expect(body.createdAt).toEqual(expect.any(String))
@@ -55,27 +77,71 @@ describe('listing handlers', () => {
       expect(command.input.Item).toEqual(body)
     })
 
-    test('preserves dynamic extra fields and ignores client id/createdAt', async () => {
+    test('creates a listing from HTTP API JWT claims and ignores body userId', async () => {
       send.mockResolvedValue({})
 
       const response = await createListing({
+        requestContext: {
+          authorizer: {
+            jwt: {
+              claims: {
+                'cognito:username': 'cognito-user-9'
+              }
+            }
+          }
+        },
         body: JSON.stringify({
           id: 'client-id',
           createdAt: '2000-01-01T00:00:00.000Z',
           title: 'Boat',
           section: 'For Sale',
           category: 'Boats',
-          userId: 'bob',
+          userId: 'body-user-should-not-win',
+          yearBuilt: '2020',
+          makeModel: 'Tracker 175',
           color: 'Blue',
-          makeModel: 'Tracker 175'
+          type: 'Fishing',
+          condition: 'Excellent',
+          price: '19000',
+          description: 'Stored indoors',
+          city: 'Madison',
+          phone: '555-222-3333'
         })
       })
 
       const body = JSON.parse(response.body)
+      expect(body.userId).toBe('cognito-user-9')
+      expect(body.yearBuilt).toBe('2020')
       expect(body.color).toBe('Blue')
       expect(body.makeModel).toBe('Tracker 175')
       expect(body.id).not.toBe('client-id')
       expect(body.createdAt).not.toBe('2000-01-01T00:00:00.000Z')
+    })
+
+    test('falls back to body userId for local non-auth tests', async () => {
+      send.mockResolvedValue({})
+
+      const response = await createListing({
+        body: JSON.stringify({
+          title: 'Desk lamp',
+          section: 'For Sale',
+          category: 'Furniture',
+          userId: 'local-user',
+          item: 'Lamp',
+          material: 'Metal',
+          color: 'Black',
+          condition: 'Good',
+          dimensions: '16in tall',
+          brand: 'Ikea',
+          price: '20',
+          description: 'Works well',
+          city: 'Peoria',
+          phone: '555-333-4444'
+        })
+      })
+
+      expect(response.statusCode).toBe(201)
+      expect(JSON.parse(response.body).userId).toBe('local-user')
     })
 
     test('returns 400 on invalid JSON', async () => {
@@ -99,6 +165,56 @@ describe('listing handlers', () => {
       expect(JSON.parse(response.body)).toEqual({
         message: 'Missing required fields: section'
       })
+    })
+
+    test('returns 400 when category-specific required fields are missing and does not write to DynamoDB', async () => {
+      const response = await createListing({
+        requestContext: {
+          authorizer: {
+            claims: {
+              username: 'alice'
+            }
+          }
+        },
+        body: JSON.stringify({
+          title: 'Sofa for sale',
+          section: 'For Sale',
+          category: 'Furniture',
+          item: 'Sofa',
+          material: 'Leather',
+          price: '150'
+        })
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body)).toEqual({
+        message: 'Missing required fields: color, condition, dimensions, brand, description, city, phone'
+      })
+      expect(send).not.toHaveBeenCalled()
+    })
+
+    test('returns 400 for an invalid section/category combination and does not write to DynamoDB', async () => {
+      const response = await createListing({
+        requestContext: {
+          authorizer: {
+            claims: {
+              sub: 'user-sub-123'
+            }
+          }
+        },
+        body: JSON.stringify({
+          title: 'Bad category',
+          section: 'For Sale',
+          category: 'Apartments',
+          price: '1000'
+        })
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body)).toEqual({
+        message: 'Invalid section/category combination'
+      })
+      expect(send).not.toHaveBeenCalled()
     })
   })
 
