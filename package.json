@@ -4,7 +4,8 @@
   "description": "Craigslist-style marketplace API",
   "main": "index.js",
   "scripts": {
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "seed:listings": "node scripts/seedListings.js"
   },
   "jest": {
     "testPathIgnorePatterns": [
