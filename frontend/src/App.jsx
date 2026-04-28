@@ -1,5 +1,6 @@
 import React from 'react';
 import { Amplify } from 'aws-amplify';
+import { signUp } from 'aws-amplify/auth'
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import Home from './pages/Home';
@@ -15,17 +16,13 @@ Amplify.configure({
   }
 });
 
-function App() {
+export default function App() {
   return (
-    <Authenticator>
-      {({ signOut, user }) => (
-        <div>
-          <Navbar user={user} signOut={signOut} />
-          <Home />
-        </div>
-      )}
+    <Authenticator loginMechanisms={['email']}>
+      {() => <Home />}
     </Authenticator>
-  );
+  )
 }
+
 
 export default App;

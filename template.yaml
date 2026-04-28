@@ -24,17 +24,29 @@ Resources:
   # -------------------------------------------------------
   # AUTH — COGNITO
   # -------------------------------------------------------
+  AutoConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/auth/autoConfirm.handler
+      Events: {}
+
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub marketplace-users-${Stage}
-      AutoVerifiedAttributes:
+      UsernameAttributes:
         - email
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireUppercase: true
-          RequireNumbers: true
+      AutoVerifiedAttributes: []
+      LambdaConfig:
+        PreSignUp: !GetAtt AutoConfirmFunction.Arn
+
+  AutoConfirmPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt AutoConfirmFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
