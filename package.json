@@ -6,14 +6,15 @@
   "scripts": {
     "test": "jest --passWithNoTests"
   },
-  "jest" : {
-      "testPathIgnorePatterns" : [
-        "/node_modules",
-        "/frontend/"
-      ]
-  }
-  ,
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules",
+      "/frontend/"
+    ]
+  },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1038.0",
+    "@aws-sdk/lib-dynamodb": "^3.1038.0",
     "pg": "^8.11.0"
   },
   "devDependencies": {
