@@ -192,6 +192,8 @@ Resources:
             RestApiId: !Ref MarketplaceApi
             Path: /listings
             Method: post
+            Auth:
+              Authorizer: NONE
 
   UpdateListingFunction:
     Type: AWS::Serverless::Function
@@ -329,6 +331,8 @@ Resources:
             RestApiId: !Ref MarketplaceApi
             Path: /images/upload-url
             Method: get
+            Auth:
+              Authorizer: NONE
 
   FrontendBucket:
     Type: AWS::S3::Bucket
