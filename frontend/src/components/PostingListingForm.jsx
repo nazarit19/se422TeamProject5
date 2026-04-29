@@ -29,17 +29,19 @@ export default function PostListingForm({ onClose, onPosted }) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-const uploadImage = async () => {
+const uploadImage = async (token) => {
   if (!imageFile) return null
   try {
-    const { uploadUrl, imageUrl } = await apiFetch('images/upload-url', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}images/upload-url`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ fileType: imageFile.type })
     })
+    const { uploadUrl, imageUrl } = await res.json()
     await fetch(uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } })
     return imageUrl
   } catch (err) {
-    console.error('Image upload failed:', err)  // 👈 add this
+    console.error('Image upload failed:', err)
     return null
   }
 }
@@ -59,14 +61,15 @@ const uploadImage = async () => {
     try {
       const session = await fetchAuthSession()
       const token =
-        session.tokens?.accessToken?.toString() ||
         session.tokens?.idToken?.toString()
+
+	  console.log(token)
 
       if (!token) {
         throw new Error('Failed to get authentication token')
       }
 
-      const imageUrl = await uploadImage()
+      const imageUrl = await uploadImage(token)
 		if (imageFile && !imageUrl) {
 			setError('Image upload failed. Please try again.')
 			setLoading(false)

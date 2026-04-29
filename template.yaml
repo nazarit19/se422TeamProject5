@@ -82,16 +82,26 @@ Resources:
   ImagesBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub marketplace-images-${Stage}-033879516309
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
-          - AllowedMethods:
-              - GET
-              - PUT
-            AllowedOrigins:
-              - '*'
-            AllowedHeaders:
-              - '*'
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT]
+            AllowedOrigins: ['*']
+  ImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${ImagesBucket}/*"
 
   # -------------------------------------------------------
   # DYNAMODB TABLES
@@ -330,9 +340,17 @@ Resources:
           Properties:
             RestApiId: !Ref MarketplaceApi
             Path: /images/upload-url
-            Method: get
+            Method: post
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer  # 👈 match whatever your other routes use
+        OptionsUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MarketplaceApi
+            Path: /images/upload-url
+            Method: options
+            Auth:
+              Authorizer: NONE  # OPTIONS must always be NONE
 
   FrontendBucket:
     Type: AWS::S3::Bucket
