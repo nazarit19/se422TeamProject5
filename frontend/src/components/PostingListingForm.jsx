@@ -38,7 +38,8 @@ const uploadImage = async () => {
     })
     await fetch(uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } })
     return imageUrl
-  } catch {
+  } catch (err) {
+    console.error('Image upload failed:', err)  // 👈 add this
     return null
   }
 }
@@ -66,6 +67,11 @@ const uploadImage = async () => {
       }
 
       const imageUrl = await uploadImage()
+		if (imageFile && !imageUrl) {
+			setError('Image upload failed. Please try again.')
+			setLoading(false)
+			return
+		}
       const res = await fetch(`${import.meta.env.VITE_API_URL}listings`, {
         method: 'POST',
         headers: {
