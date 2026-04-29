@@ -29,19 +29,19 @@ export default function PostListingForm({ onClose, onPosted }) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const uploadImage = async () => {
-    if (!imageFile) return null
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}images/upload-url?filename=${imageFile.name}&contentType=${imageFile.type}`
-      )
-      const { uploadUrl, imageUrl } = await res.json()
-      await fetch(uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } })
-      return imageUrl
-    } catch {
-      return null
-    }
+const uploadImage = async () => {
+  if (!imageFile) return null
+  try {
+    const { uploadUrl, imageUrl } = await apiFetch('images/upload-url', {
+      method: 'POST',
+      body: JSON.stringify({ fileType: imageFile.type })
+    })
+    await fetch(uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } })
+    return imageUrl
+  } catch {
+    return null
   }
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
