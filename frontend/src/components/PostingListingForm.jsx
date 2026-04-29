@@ -124,7 +124,7 @@ export default function PostListingForm({ onClose, onPosted }) {
               disabled={!selectedSection || !selectedCategory}
               onClick={() => setStep(2)}
             >
-              {'Continue ->'}
+              Continue -{'>'}
             </button>
           </div>
         )}
@@ -132,8 +132,8 @@ export default function PostListingForm({ onClose, onPosted }) {
         {step === 2 && (
           <form onSubmit={handleSubmit}>
             <p style={styles.stepLabel}>
-              <span>{`Step 2: ${selectedSection} > ${selectedCategory}`}</span>
-              <button type="button" style={styles.backBtn} onClick={() => setStep(1)}>{'<- Back'}</button>
+              <span>Step 2: {selectedSection} &gt; {selectedCategory}</span>
+              <button type="button" style={styles.backBtn} onClick={() => setStep(1)}>&lt;- Back</button>
             </p>
 
             {error && <p style={styles.error}>{error}</p>}
